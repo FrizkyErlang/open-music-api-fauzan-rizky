@@ -28,14 +28,13 @@ class SongsService {
     return result.rows[0].id;
   }
 
-  async getSongs({ title, performer }) {
+  async getSongs({ title, performer, albumId }) {
     const titlequery = title ? `%${title}%` : null;
     const performerquery = performer ? `%${performer}%` : null;
     const query = {
-      text: 'SELECT id, title, performer FROM songs WHERE ($1::TEXT is null or title ILIKE $1::TEXT) and ($2::TEXT is null or performer ILIKE $2::TEXT)',
-      values: [titlequery, performerquery],
+      text: 'SELECT id, title, performer FROM songs  WHERE ($1::TEXT is null or title ILIKE $1::TEXT) and ($2::TEXT is null or performer ILIKE $2::TEXT) and ($3::TEXT is null or album_id = $3::TEXT)',
+      values: [titlequery, performerquery, albumId],
     };
-    console.log(query);
 
     const result = await this._pool.query(query);
 

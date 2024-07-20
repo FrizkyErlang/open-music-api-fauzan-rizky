@@ -2,8 +2,9 @@
 const autoBind = require('auto-bind');
 
 class AlbumsHandler {
-  constructor(service, validator) {
-    this._service = service;
+  constructor(albumService, songService, validator) {
+    this._serviceAlbum = albumService;
+    this._serviceSong = songService;
     this._validator = validator;
 
     autoBind(this); // mem-bind nilai this untuk seluruh method sekaligus
@@ -13,7 +14,7 @@ class AlbumsHandler {
     this._validator.validateAlbumPayload(request.payload);
     const { name, year } = request.payload;
 
-    const albumId = await this._service.addAlbum({ name, year });
+    const albumId = await this._serviceAlbum.addAlbum({ name, year });
 
     const response = h.response({
       status: 'success',
@@ -27,7 +28,7 @@ class AlbumsHandler {
   }
 
   async getAlbumsHandler() {
-    const albums = await this._service.getAlbums();
+    const albums = await this._serviceAlbum.getAlbums();
     return {
       status: 'success',
       data: {
@@ -38,7 +39,9 @@ class AlbumsHandler {
 
   async getAlbumByIdHandler(request) {
     const { id } = request.params;
-    const album = await this._service.getAlbumById(id);
+    const album = await this._serviceAlbum.getAlbumById(id);
+    const songs = await this._serviceSong.getSongs({ albumId: id });
+    album.songs = songs;
     return {
       status: 'success',
       data: {
@@ -52,7 +55,7 @@ class AlbumsHandler {
     const { name, year } = request.payload;
     const { id } = request.params;
 
-    await this._service.editAlbumById(id, { name, year });
+    await this._serviceAlbum.editAlbumById(id, { name, year });
 
     return {
       status: 'success',
@@ -62,7 +65,7 @@ class AlbumsHandler {
 
   async deleteAlbumByIdHandler(request) {
     const { id } = request.params;
-    await this._service.deleteAlbumById(id);
+    await this._serviceAlbum.deleteAlbumById(id);
 
     return {
       status: 'success',
