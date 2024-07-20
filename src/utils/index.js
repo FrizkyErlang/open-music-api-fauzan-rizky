@@ -3,15 +3,17 @@ const mapDBSongToModel = ({
   id,
   title,
   year,
+  genre,
   performer,
-  durations,
+  duration,
   album_id,
 }) => ({
   id,
   title,
   year,
+  genre,
   performer,
-  durations,
+  duration,
   albumId: album_id,
 });
 

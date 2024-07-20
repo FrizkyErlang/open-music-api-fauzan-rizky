@@ -38,6 +38,10 @@ exports.up = (pgm) => {
       type: 'INTEGER',
       notNull: true,
     },
+    genre: {
+      type: 'TEXT',
+      notNull: true,
+    },
     performer: {
       type: 'TEXT',
       notNull: true,
