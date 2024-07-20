@@ -1,0 +1,25 @@
+{
+    "env": {
+        "es2021": true,
+        "node": true
+    },
+    "extends": [
+        "airbnb-base"
+    ],
+    "parserOptions": {
+        "ecmaVersion": 2020
+    },
+    "rules": {
+        "no-console": "off",
+        "eslint linebreak-style": [0, "error", "windows"],
+        "object-curly-newline": [
+            "error",
+            {
+            "ObjectExpression": { "consistent": true, "multiline": true },
+            "ObjectPattern": { "consistent": true, "multiline": true },
+            "ImportDeclaration": "never",
+            "ExportDeclaration": { "multiline": true, "minProperties": 3 }
+            }
+        ]
+    }
+}
