@@ -56,9 +56,7 @@ class SongsService {
       values: [title, year, genre, performer, duration, albumID, id],
     };
 
-    console.log(query);
     const result = await this._pool.query(query);
-    console.log(result);
 
     if (!result.rows.length) {
       throw new NotFoundError('Gagal memperbarui lagu. Id tidak ditemukan');
