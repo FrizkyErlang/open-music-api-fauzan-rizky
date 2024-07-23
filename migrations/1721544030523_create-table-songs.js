@@ -40,7 +40,7 @@ exports.up = (pgm) => {
       type: 'VARCHAR(50)',
       notNull: false,
       references: '"albums"',
-      onDelete: 'SET NULL',
+      onDelete: 'SET NULL', // karena kalau albumnya di delete, lagunya belum tentu dihapus
     },
   });
   pgm.createIndex('songs', 'album_id');
