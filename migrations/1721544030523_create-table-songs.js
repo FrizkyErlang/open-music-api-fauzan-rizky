@@ -47,7 +47,7 @@ exports.up = (pgm) => {
   pgm.addConstraint(
     'songs',
     'fk_songs.album_id_albums.id',
-    'FOREIGN KEY(album_id) REFERENCES albums(id) ON SET NULL' // karena kalau albumnya di delete, lagunya belum tentu dihapus
+    'FOREIGN KEY(album_id) REFERENCES albums(id) ON DELETE SET NULL' // karena kalau albumnya di delete, lagunya belum tentu dihapus
   );
 };
 

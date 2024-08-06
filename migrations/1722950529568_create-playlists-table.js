@@ -18,6 +18,8 @@ exports.up = (pgm) => {
       notNull: true,
     },
   });
+
+  pgm.createIndex('playlists', 'owner');
 };
 
 /**
@@ -26,5 +28,7 @@ exports.up = (pgm) => {
  * @returns {Promise<void> | void}
  */
 exports.down = (pgm) => {
+  pgm.dropIndex('playlists', 'owner');
+
   pgm.dropTable('playlists');
 };
