@@ -31,10 +31,9 @@ class PlaylistsService {
 
   async getPlaylists(owner) {
     const query = {
-      text: `SELECT playlists.id FROM playlists
-      LEFT JOIN collaborations ON collaborations.playlist_id = playlists.id
-      WHERE playlists.owner = $1 OR collaborations.user_id = $1
-      GROUP BY playlists.id`,
+      text: `SELECT playlists.id, playlists.name, users.username FROM playlists
+      LEFT JOIN users ON users.id = playlists.owner
+      WHERE playlists.owner = $1`,
       values: [owner],
     };
     const result = await this._pool.query(query);
@@ -90,8 +89,9 @@ class PlaylistsService {
 
   async getPlaylistSongById(id) {
     const query = {
-      text: `SELECT playlist_songs.song_id
+      text: `SELECT song.id, song.title, song.performer
       FROM playlist_songs
+      LEFT JOIN songs on playlist_songs.song_id = songs.id
       WHERE playlist_id = $1`,
       values: [id],
     };
@@ -100,7 +100,7 @@ class PlaylistsService {
     return result.rows;
   }
 
-  async deletePlaylistSongByIdAndSongId(id, songId) {
+  async deletePlaylistSongByIdAndSongId({ id, songId }) {
     const query = {
       text: `DELETE FROM playlist_songs 
       WHERE playlist_id = $1 and song_id = $2 
@@ -115,7 +115,7 @@ class PlaylistsService {
     }
   }
 
-  async addPlaylistActivity(songId, playlistId, userId, action) {
+  async addPlaylistActivity({ songId, playlistId, userId, action }) {
     const id = `activity-${nanoid(16)}`;
     const time = new Date().toISOString();
 
@@ -129,7 +129,6 @@ class PlaylistsService {
     if (!result.rows.length) {
       throw new InvariantError('Activities gagal ditambahkan');
     }
-    return result.rows[0].id;
   }
 
   async getPlaylistActivities(playlistId) {
