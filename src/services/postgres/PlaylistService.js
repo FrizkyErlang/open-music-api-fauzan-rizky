@@ -4,7 +4,6 @@ const { nanoid } = require('nanoid');
 const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
-// const { mapDBToModel } = require('../../utils');
 
 class PlaylistsService {
   constructor(collaborationService) {
@@ -31,9 +30,10 @@ class PlaylistsService {
 
   async getPlaylists(owner) {
     const query = {
-      text: `SELECT playlists.id, playlists.name, users.username FROM playlists
+      text: `SELECT playlists.id, playlists.name, users.username 
+      FROM playlists
       LEFT JOIN users ON users.id = playlists.owner
-      LEFT JOIN colaborations ON playlist.id = colaborations.playlist_id
+      LEFT JOIN colaborations ON playlists.id = colaborations.playlist_id
       WHERE playlists.owner = $1 OR colaborations.user_id = $1
       GROUP BY playlists.id, playlists.name, users.username`,
       values: [owner],
@@ -44,7 +44,7 @@ class PlaylistsService {
 
   async getPlaylistById(id) {
     const query = {
-      text: `SELECT playlists.id, playlist.name, users.username
+      text: `SELECT playlists.id, playlists.name, users.username
       FROM playlists
       LEFT JOIN users ON users.id = playlists.owner
       WHERE playlists.id = $1`,
@@ -56,7 +56,7 @@ class PlaylistsService {
       throw new NotFoundError('Playlist tidak ditemukan');
     }
 
-    return result.rows;
+    return result.rows[0];
   }
 
   async deletePlaylistById(id) {
@@ -91,7 +91,7 @@ class PlaylistsService {
 
   async getPlaylistSongById(id) {
     const query = {
-      text: `SELECT song.id, song.title, song.performer
+      text: `SELECT songs.id, songs.title, songs.performer
       FROM playlist_songs
       LEFT JOIN songs on playlist_songs.song_id = songs.id
       WHERE playlist_id = $1`,
@@ -138,7 +138,7 @@ class PlaylistsService {
       text: `SELECT users.username, songs.title, playlist_song_activities.action, playlist_song_activities.time
       FROM playlist_song_activities
       LEFT JOIN songs ON playlist_song_activities.song_id = songs.id
-      LEFT JOIN users ON playlist_song_activities.user_id = user.id
+      LEFT JOIN users ON playlist_song_activities.user_id = users.id
       WHERE playlist_id = $1`,
       values: [playlistId],
     };
@@ -154,10 +154,12 @@ class PlaylistsService {
 
   async verifyPlaylistOwner(id, owner) {
     const query = {
-      text: 'SELECT * FROM playlist WHERE id = $1',
+      text: 'SELECT * FROM playlists WHERE id = $1',
       values: [id],
     };
+
     const result = await this._pool.query(query);
+
     if (!result.rows.length) {
       throw new NotFoundError('Playlist tidak ditemukan');
     }

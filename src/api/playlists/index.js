@@ -5,12 +5,13 @@ const routes = require('./routes');
 module.exports = {
   name: 'playlists',
   version: '1.0.0',
-  register: async (server, { playlistService, songService, validator }) => {
+  register: async (server, { playlistsService, songService, validator }) => {
     const playlistsHandler = new PlaylistsHandler(
-      playlistService,
+      playlistsService,
       songService,
       validator
     );
+
     server.route(routes(playlistsHandler));
   },
 };

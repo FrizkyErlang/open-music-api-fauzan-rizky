@@ -42,9 +42,10 @@ const init = async () => {
   const server = Hapi.server({
     port: process.env.PORT,
     host: process.env.HOST,
-    debug: {
-      request: ['error'],
-    },
+    // turn on when testing
+    // debug: {
+    //   request: ['error'],
+    // },
     routes: {
       cors: {
         origin: ['*'],
@@ -113,6 +114,7 @@ const init = async () => {
       options: {
         collaborationsService,
         playlistsService,
+        usersService,
         validator: CollaborationsValidator,
       },
     },

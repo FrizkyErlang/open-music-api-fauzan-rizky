@@ -3,9 +3,10 @@
 const autoBind = require('auto-bind');
 
 class CollaborationsHandler {
-  constructor(collaborationsService, playlistService, validator) {
+  constructor(collaborationsService, playlistService, usersService, validator) {
     this._serviceCollaborations = collaborationsService;
     this._servicePlaylist = playlistService;
+    this._serviceUsers = usersService;
     this._validator = validator;
 
     autoBind(this);
@@ -17,6 +18,7 @@ class CollaborationsHandler {
     const { playlistId, userId } = request.payload;
 
     await this._servicePlaylist.verifyPlaylistOwner(playlistId, credentialId);
+    await this._serviceUsers.getUserById(userId);
     const collaborationId = await this._serviceCollaborations.addCollaboration(
       playlistId,
       userId
