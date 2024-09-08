@@ -83,7 +83,7 @@ class PlaylistsHandler {
     return response;
   }
 
-  async getPlaylistSongIdHandler(request) {
+  async getPlaylistSongByIdHandler(request) {
     const { id } = request.params;
     const { id: credentialId } = request.auth.credentials;
 
@@ -120,6 +120,23 @@ class PlaylistsHandler {
     return {
       status: 'success',
       message: 'Lagu berhasil berhasil dihapus dari playlist',
+    };
+  }
+
+  async getPlaylistActivitiesByIdHandler(request) {
+    const { id } = request.params;
+    const { id: credentialId } = request.auth.credentials;
+
+    await this._servicePlaylist.verifyPlaylistAccess(id, credentialId);
+    await this._servicePlaylist.getPlaylistById(id);
+    const activities = await this._servicePlaylist.getPlaylistActivities(id);
+
+    return {
+      status: 'success',
+      data: {
+        playlistId: id,
+        activities,
+      },
     };
   }
 }
