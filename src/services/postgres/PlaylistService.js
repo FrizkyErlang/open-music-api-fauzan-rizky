@@ -33,7 +33,9 @@ class PlaylistsService {
     const query = {
       text: `SELECT playlists.id, playlists.name, users.username FROM playlists
       LEFT JOIN users ON users.id = playlists.owner
-      WHERE playlists.owner = $1`,
+      LEFT JOIN colaborations ON playlist.id = colaborations.playlist_id
+      WHERE playlists.owner = $1 OR colaborations.user_id = $1
+      GROUP BY playlists.id, playlists.name, users.username`,
       values: [owner],
     };
     const result = await this._pool.query(query);
