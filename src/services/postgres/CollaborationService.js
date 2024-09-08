@@ -13,7 +13,7 @@ class CollaborationsService {
 
     const query = {
       text: 'INSERT INTO colaborations VALUES($1, $2, $3) RETURNING id',
-      values: [id, playlistId, userId],
+      values: [id, userId, playlistId],
     };
 
     const result = await this._pool.query(query);
