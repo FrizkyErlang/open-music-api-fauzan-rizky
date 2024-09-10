@@ -1,3 +1,4 @@
+/* eslint-disable comma-dangle */
 /* eslint-disable no-underscore-dangle */
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
@@ -27,7 +28,9 @@ class AlbumsService {
   }
 
   async getAlbums() {
-    const result = await this._pool.query('SELECT * FROM albums');
+    const result = await this._pool.query(
+      'SELECT albums.id, albums.name, albums.year FROM albums'
+    );
     return result.rows;
   }
 
@@ -49,6 +52,19 @@ class AlbumsService {
     const query = {
       text: 'UPDATE albums SET name = $1, year = $2 WHERE id = $3 RETURNING id',
       values: [name, year, id],
+    };
+
+    const result = await this._pool.query(query);
+
+    if (!result.rows.length) {
+      throw new NotFoundError('Gagal memperbarui album. Id tidak ditemukan');
+    }
+  }
+
+  async editAlbumCoverById(id, coverUrl) {
+    const query = {
+      text: 'UPDATE albums SET coverUrl = $1 WHERE id = $2 RETURNING id',
+      values: [coverUrl, id],
     };
 
     const result = await this._pool.query(query);

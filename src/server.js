@@ -1,3 +1,4 @@
+/* eslint-disable comma-dangle */
 /* eslint-disable no-underscore-dangle */
 /* eslint-disable import/no-extraneous-dependencies */
 // mengimpor dotenv dan menjalankan konfigurasinya
@@ -5,6 +6,8 @@ require('dotenv').config();
 
 const Hapi = require('@hapi/hapi');
 const Jwt = require('@hapi/jwt');
+const Inert = require('@hapi/inert');
+const path = require('path');
 const ClientError = require('./exceptions/ClientError');
 // albums
 const albums = require('./api/albums');
@@ -35,6 +38,10 @@ const CollaborationsValidator = require('./validator/collaborations');
 const _exports = require('./api/exports');
 const ProducerService = require('./services/rabbitmq/ProducerService');
 const ExportsValidator = require('./validator/exports');
+// uploads
+const uploads = require('./api/uploads');
+const StorageService = require('./services/storage/StorageService');
+const UploadsValidator = require('./validator/uploads');
 
 const init = async () => {
   const albumService = new AlbumService();
@@ -43,6 +50,9 @@ const init = async () => {
   const authenticationsService = new AuthenticationsService();
   const collaborationsService = new CollaborationsService();
   const playlistsService = new PlaylistsService(collaborationsService);
+  const storageService = new StorageService(
+    path.resolve(__dirname, 'api/uploads/file/covers')
+  );
 
   const server = Hapi.server({
     port: process.env.PORT,
@@ -62,6 +72,9 @@ const init = async () => {
   await server.register([
     {
       plugin: Jwt,
+    },
+    {
+      plugin: Inert,
     },
   ]);
 
@@ -137,6 +150,14 @@ const init = async () => {
         exportsService: ProducerService,
         playlistsService,
         validator: ExportsValidator,
+      },
+    },
+    {
+      plugin: uploads,
+      options: {
+        uploadsService: storageService,
+        albumService,
+        validator: UploadsValidator,
       },
     },
   ]);
