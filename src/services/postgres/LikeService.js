@@ -38,20 +38,20 @@ class LikesService {
 
   async countLike(albumId) {
     const queryAlbum = {
-      text: `SELECT count(*) as likes
+      text: `SELECT cast(count(*) as int) as likes
       FROM user_album_likes 
-      WHERE album_id = $2`,
+      WHERE album_id = $1`,
       values: [albumId],
     };
 
     const result = await this._pool.query(queryAlbum);
 
-    return result.rows[0];
+    return result.rows[0].likes;
   }
 
   async deleteLike({ userId, albumId }) {
     const query = {
-      text: 'DELETE FROM albums WHERE user_id = $1 AND album_id = $2 RETURNING id',
+      text: 'DELETE FROM user_album_likes WHERE user_id = $1 AND album_id = $2 RETURNING id',
       values: [userId, albumId],
     };
 
