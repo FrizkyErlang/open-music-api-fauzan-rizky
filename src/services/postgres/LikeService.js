@@ -42,7 +42,7 @@ class LikesService {
 
   async countLikes(albumId) {
     try {
-      // mendapatkan catatan dari cache
+      // mendapatkan jumlah like dari cache
       const result = await this._cacheService.get(`likes:${albumId}`);
       return {
         isCache: true,
@@ -58,7 +58,7 @@ class LikesService {
 
       const result = await this._pool.query(queryAlbum);
 
-      // catatan akan disimpan pada cache sebelum fungsi countLike dikembalikan
+      // jumlah like akan disimpan pada cache sebelum fungsi countLike dikembalikan
       await this._cacheService.set(
         `likes:${albumId}`,
         JSON.stringify(result.rows[0])

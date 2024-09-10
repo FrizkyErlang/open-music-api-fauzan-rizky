@@ -1,3 +1,4 @@
+/* eslint-disable comma-dangle */
 /* eslint-disable no-underscore-dangle */
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
@@ -6,9 +7,10 @@ const NotFoundError = require('../../exceptions/NotFoundError');
 const AuthorizationError = require('../../exceptions/AuthorizationError');
 
 class PlaylistsService {
-  constructor(collaborationService) {
+  constructor(collaborationService, cacheService) {
     this._pool = new Pool();
     this._collaborationService = collaborationService;
+    this._cacheService = cacheService;
   }
 
   async addPlaylist({ name, owner }) {
@@ -25,21 +27,40 @@ class PlaylistsService {
       throw new InvariantError('Playlist gagal ditambahkan');
     }
 
+    await this._cacheService.delete(`playlists:${owner}`);
+
     return result.rows[0].id;
   }
 
   async getPlaylists(owner) {
-    const query = {
-      text: `SELECT playlists.id, playlists.name, users.username 
-      FROM playlists
-      LEFT JOIN users ON users.id = playlists.owner
-      LEFT JOIN colaborations ON playlists.id = colaborations.playlist_id
-      WHERE playlists.owner = $1 OR colaborations.user_id = $1
-      GROUP BY playlists.id, playlists.name, users.username`,
-      values: [owner],
-    };
-    const result = await this._pool.query(query);
-    return result.rows;
+    try {
+      // mendapatkan playlist dari cache
+      const result = await this._cacheService.get(`playlists:${owner}`);
+      return {
+        isCache: true,
+        result: JSON.parse(result),
+      };
+    } catch (error) {
+      const query = {
+        text: `SELECT playlists.id, playlists.name, users.username 
+        FROM playlists
+        LEFT JOIN users ON users.id = playlists.owner
+        LEFT JOIN colaborations ON playlists.id = colaborations.playlist_id
+        WHERE playlists.owner = $1 OR colaborations.user_id = $1
+        GROUP BY playlists.id, playlists.name, users.username`,
+        values: [owner],
+      };
+      const result = await this._pool.query(query);
+      // jumlah like akan disimpan pada cache sebelum fungsi countLike dikembalikan
+      await this._cacheService.set(
+        `playlists:${owner}`,
+        JSON.stringify(result.rows)
+      );
+      return {
+        isCache: false,
+        result: result.rows,
+      };
+    }
   }
 
   async getPlaylistById(id) {
@@ -61,7 +82,7 @@ class PlaylistsService {
 
   async deletePlaylistById(id) {
     const query = {
-      text: 'DELETE FROM playlists WHERE id = $1 RETURNING id',
+      text: 'DELETE FROM playlists WHERE id = $1 RETURNING id, owner',
       values: [id],
     };
 
@@ -70,6 +91,9 @@ class PlaylistsService {
     if (!result.rows.length) {
       throw new NotFoundError('Playlist gagal dihapus. Id tidak ditemukan');
     }
+
+    const { owner } = result.rows[0];
+    await this._cacheService.delete(`playlists:${owner}`);
   }
 
   async addPlaylistSong({ songId, playlistId }) {
@@ -120,6 +144,7 @@ class PlaylistsService {
   async addPlaylistActivity({ songId, playlistId, userId, action }) {
     const id = `activity-${nanoid(16)}`;
     const time = new Date().toISOString();
+    console.log(action);
 
     const query = {
       text: 'INSERT INTO playlist_song_activities VALUES($1, $2, $3, $4, $5, $6) RETURNING id',
@@ -139,7 +164,8 @@ class PlaylistsService {
       FROM playlist_song_activities
       LEFT JOIN songs ON playlist_song_activities.song_id = songs.id
       LEFT JOIN users ON playlist_song_activities.user_id = users.id
-      WHERE playlist_id = $1`,
+      WHERE playlist_id = $1
+      ORDER BY playlist_song_activities.time`,
       values: [playlistId],
     };
 

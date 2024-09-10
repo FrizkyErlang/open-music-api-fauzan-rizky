@@ -1,3 +1,4 @@
+/* eslint-disable operator-linebreak */
 /* eslint-disable no-underscore-dangle */
 const autoBind = require('auto-bind');
 
@@ -31,15 +32,22 @@ class PlaylistsHandler {
     return response;
   }
 
-  async getPlaylistsHandler(request) {
+  async getPlaylistsHandler(request, h) {
     const { id: credentialId } = request.auth.credentials;
-    const playlists = await this._servicePlaylist.getPlaylists(credentialId);
-    return {
+    const { result: playlists, isCache } =
+      await this._servicePlaylist.getPlaylists(credentialId);
+
+    const response = h.response({
       status: 'success',
       data: {
         playlists,
       },
-    };
+    });
+    if (isCache) {
+      response.header('X-Data-Source', 'cache');
+    }
+
+    return response;
   }
 
   async deletePlaylistByIdHandler(request) {
