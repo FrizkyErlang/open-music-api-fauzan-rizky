@@ -2,7 +2,6 @@
 /**
  * @type {import('node-pg-migrate').ColumnDefinitions | undefined}
  */
-exports.shorthands = undefined;
 
 exports.up = (pgm) => {
   pgm.createTable('playlist_song_activities', {

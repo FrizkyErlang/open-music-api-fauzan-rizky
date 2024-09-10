@@ -3,7 +3,6 @@
 /**
  * @type {import('node-pg-migrate').ColumnDefinitions | undefined}
  */
-exports.shorthands = undefined;
 
 /**
  * @param pgm {import('node-pg-migrate').MigrationBuilder}
@@ -23,6 +22,10 @@ exports.up = (pgm) => {
     year: {
       type: 'INTEGER',
       notNull: true,
+    },
+    coverUrl: {
+      type: 'TEXT',
+      notNull: false,
     },
   });
 };
