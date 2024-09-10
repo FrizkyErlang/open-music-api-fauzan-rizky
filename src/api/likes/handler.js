@@ -1,3 +1,4 @@
+/* eslint-disable comma-dangle */
 /* eslint-disable no-underscore-dangle */
 const autoBind = require('auto-bind');
 
@@ -37,17 +38,24 @@ class LikesHandler {
     };
   }
 
-  async getLikesCount(request) {
+  async getLikesCount(request, h) {
     const { id: albumId } = request.params;
 
-    const likes = await this._serviceLike.countLike(albumId);
-
-    return {
+    const { result: likes, isCache } = await this._serviceLike.countLikes(
+      albumId
+    );
+    const response = h.response({
       status: 'success',
       data: {
-        likes,
+        // eslint-disable-next-line radix
+        likes: parseInt(likes),
       },
-    };
+    });
+    if (isCache) {
+      response.header('X-Data-Source', 'cache');
+    }
+
+    return response;
   }
 }
 

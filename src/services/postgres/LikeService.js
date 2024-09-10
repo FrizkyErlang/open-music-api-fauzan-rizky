@@ -1,3 +1,4 @@
+/* eslint-disable comma-dangle */
 /* eslint-disable no-underscore-dangle */
 const { Pool } = require('pg');
 const { nanoid } = require('nanoid');
@@ -5,8 +6,9 @@ const InvariantError = require('../../exceptions/InvariantError');
 const NotFoundError = require('../../exceptions/NotFoundError');
 
 class LikesService {
-  constructor() {
+  constructor(cacheService) {
     this._pool = new Pool();
+    this._cacheService = cacheService;
   }
 
   async addLike({ userId, albumId }) {
@@ -22,6 +24,8 @@ class LikesService {
     if (!result.rows[0].id) {
       throw new InvariantError('Album gagal disukai');
     }
+
+    await this._cacheService.delete(`likes:${albumId}`);
   }
 
   async checkLike({ userId, albumId }) {
@@ -36,17 +40,35 @@ class LikesService {
     }
   }
 
-  async countLike(albumId) {
-    const queryAlbum = {
-      text: `SELECT cast(count(*) as int) as likes
-      FROM user_album_likes 
-      WHERE album_id = $1`,
-      values: [albumId],
-    };
+  async countLikes(albumId) {
+    try {
+      // mendapatkan catatan dari cache
+      const result = await this._cacheService.get(`likes:${albumId}`);
+      return {
+        isCache: true,
+        result: JSON.parse(result).likes,
+      };
+    } catch (error) {
+      const queryAlbum = {
+        text: `SELECT count(*) as likes
+        FROM user_album_likes 
+        WHERE album_id = $1`,
+        values: [albumId],
+      };
 
-    const result = await this._pool.query(queryAlbum);
+      const result = await this._pool.query(queryAlbum);
 
-    return result.rows[0].likes;
+      // catatan akan disimpan pada cache sebelum fungsi countLike dikembalikan
+      await this._cacheService.set(
+        `likes:${albumId}`,
+        JSON.stringify(result.rows[0])
+      );
+
+      return {
+        isCache: false,
+        result: result.rows[0].likes,
+      };
+    }
   }
 
   async deleteLike({ userId, albumId }) {
@@ -60,6 +82,8 @@ class LikesService {
     if (!result.rows.length) {
       throw new NotFoundError('Album gagal dihapus. Id tidak ditemukan');
     }
+
+    await this._cacheService.delete(`likes:${albumId}`);
   }
 }
 
