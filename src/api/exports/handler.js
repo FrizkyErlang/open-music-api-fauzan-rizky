@@ -17,11 +17,11 @@ class ExportsHandler {
     const { id: credentialId } = request.auth.credentials;
 
     await this._servicePlaylist.verifyPlaylistOwner(id, credentialId);
+    await this._servicePlaylist.getPlaylistById(id);
 
     const message = {
-      userId: credentialId,
-      targetEmail: request.payload.targetEmail,
       playlistId: id,
+      targetEmail: request.payload.targetEmail,
     };
 
     await this._serviceExports.sendMessage(
